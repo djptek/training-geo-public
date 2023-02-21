@@ -52,24 +52,30 @@ def index():
 			## Variable name: rs
 
 			# <Your code here!>
-			
+			rs = redis.hscan('idx:city_by_name', 0, city, 20000)[1]
+			print("DEBUG: rs = {}".format(rs))
 
 			# Take the first city
 			## BTW: This might cause some unexpected results (e.g., London in the USA doesn't have breweries in the database)
-			r = next(rs)
-			name = r[0]
-			id = r[1]
+			# r = next(rs)
 
+			name = list(rs)[0]
+			id = rs[name]
+			
 			# Task 2 - Retrieve the country of the city
 			## Variable name: country
-			
 
 			# <Your code here!>
+			country = redis.hget("ct:{}".format(id), 'country')
 			
 			print("DEBUG: id = {}, city = {}, country = {}".format(id, name, country))
 
 			# Task 3 - Retrieve the coordinates of the city
 			## Variable name: pos
+			rs = redis.hgetall("ct:{}".format(id))
+			pos = [[rs['lng'],rs['lat']]]
+			
+			print("DEBUG: pos = {}".format(pos))
 
 			# <Your code here!>
 
@@ -78,9 +84,10 @@ def index():
 			## Variable name: brewcoords
 			lng = pos[0][0]
 			lat = pos[0][1]
-			
+			print("DEBUG: lng = {} lat = {}]".format(lat, lng))
+
 			# <Your code here!>
-			
+			brewcoords = redis.geosearch(name='idx:breweries', longitude=lng, latitude=lat, radius=dist, unit='KM', sort='ASC', count=1000, withcoord=True, withdist=False)
 			print("DEBUG: coordinates = {}".format(brewcoords))
 
 			# Task 5 - Retrieve brewery details
@@ -93,10 +100,9 @@ def index():
 				blng = bcoord[0]
 				blat = bcoord[1]
 				
-				# <Your code here!>
-
-
-				print("DEBUG: breweries = {}".format(breweries))			
+				b = redis.hgetall('brw:'+bid)
+				breweries.append(b)
+			print("DEBUG: breweries = {}".format(breweries))			
 
 			# Render
 			return render_template('home.html', title=TITLE, desc=DESC, result=breweries,status="{} breweries found in a radius of {} miles that are close to '{}*' in the country {}".format(len(breweries),dist,city, country))

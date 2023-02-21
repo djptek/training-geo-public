@@ -1,5 +1,7 @@
+import os
+
 REDIS_CFG = {
-	"host" : "localhost",
+	"host" : os.getenv('REDIS_HOST'),
 	"port" : 6379,
-	"password" : ""
+	"password" : os.getenv('REDIS_PASS')
 } 
